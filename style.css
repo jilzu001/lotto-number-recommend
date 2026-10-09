@@ -8,3 +8,6 @@
 @media(max-height:620px) and (max-width:599px){.window{height:80px}.push>span{padding:7px}.machine{padding-bottom:14px}main:has(#today:not([hidden])) .slots{display:none}main:has(#today:not([hidden])) .push{margin-top:14px}#today{min-height:42px;padding:7px 14px}.footnote{font-size:10px}}
 
 @media(min-width:600px) and (max-height:480px){.window{height:80px}.slots{margin:10px 0}.push>span{padding:8px}}
+#already h2{font-size:24px;margin:4px 0 14px}#already-description{font-size:13px;line-height:1.7;margin:0 0 22px}#already .secondary{width:100%;margin-top:10px}#already-today{background:#a9d881}
+.slots span.filled{background:#ffe34a}.slots span.filled:nth-child(2),.slots span.filled:nth-child(6){background:#5275d4;color:white}.slots span.filled:nth-child(3){background:#f08a76}.slots span.filled:nth-child(4){background:#a9d881}
+@media(max-height:620px) and (max-width:599px){main:has(#today:not([hidden])) .slots{display:flex;margin:12px 0}main:has(#today:not([hidden])) .window{display:none}}
