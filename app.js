@@ -5,6 +5,17 @@ const HISTORY_KEY='lotto-recommend-history-v1';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const day=(date=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
 let busy=false,run=0;
+let lastFit='';
+function fitScreen(){
+ const viewport=window.visualViewport;
+ const height=viewport&&viewport.scale===1?Math.min(innerHeight,viewport.height):innerHeight;
+ const signature=[innerWidth,height,$('#today').hidden].join('|');if(signature===lastFit)return;lastFit=signature;
+ document.documentElement.style.setProperty('--screen-height',height+'px');
+ const main=$('main');
+ for(const density of ['normal','compact','tight','minimum']){main.dataset.density=density;if(main.getBoundingClientRect().height+8<=height)break;}
+}
+window.addEventListener('resize',()=>requestAnimationFrame(fitScreen));
+window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(fitScreen));
 function valid(r){return r&&typeof r.day==='string'&&Array.isArray(r.numbers)&&r.numbers.length===6&&new Set(r.numbers).size===6&&r.numbers.every(n=>Number.isInteger(n)&&n>=1&&n<=45);}
 function readHistory(){const saved=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');if(!Array.isArray(saved))throw Error('Invalid history');const latest=JSON.parse(localStorage.getItem(KEY)||'null');const records=[...(valid(latest)?[latest]:[]),...saved.filter(valid)];return [...new Map(records.map(r=>[r.day,r])).values()].sort((a,b)=>b.day.localeCompare(a.day)).slice(0,7);}
 function saveHistory(record){const records=[record,...readHistory().filter(r=>r.day!==record.day)].sort((a,b)=>b.day.localeCompare(a.day)).slice(0,7);localStorage.setItem(HISTORY_KEY,JSON.stringify(records));}
@@ -24,7 +35,7 @@ function generate(date=day(),salt=Date.now()+'-'+crypto.getRandomValues(new Uint
  }
  return result;
 }
-function refresh(){let r=null,ok=true;try{r=readToday();localStorage.setItem(KEY+'-check','1');localStorage.removeItem(KEY+'-check');}catch{ok=false;}$('#recommend').disabled=busy||!ok;$('#today').hidden=!r;$('#today').disabled=busy;$('#status').textContent=!ok?'추천을 저장하려면 브라우저 저장을 허용해 주세요.':r?'오늘 추천 완료 · 한국시간 자정에 새 추천':'한국시간 자정에 새 추천';}
+function refresh(){let r=null,ok=true;try{r=readToday();localStorage.setItem(KEY+'-check','1');localStorage.removeItem(KEY+'-check');}catch{ok=false;}$('#recommend').disabled=busy||!ok;$('#today').hidden=!r;$('#today').disabled=busy;$('#status').textContent=!ok?'추천을 저장하려면 브라우저 저장을 허용해 주세요.':r?'오늘 추천 완료 · 한국시간 자정에 새 추천':'한국시간 자정에 새 추천';fitScreen();}
 async function claim(){const commit=()=>{const prior=readToday();if(prior)return {record:prior,replay:true};const date=day(),record={day:date,method:'irregular-weighted-v1',numbers:generate(date)};saveHistory(record);localStorage.setItem(KEY,JSON.stringify(record));return {record,replay:false};};if(navigator.locks)return navigator.locks.request(KEY,commit);throw Error('Storage lock unavailable');}
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function show(record,replay=false){const token=++run;const dialog=$('#result');dialog.className=replay?'':'gathering';$('#result-date').textContent=record.day+' · 오늘의 흐름';$('.confetti').replaceChildren();$('#confirm').disabled=!replay;$('#reveal-status').textContent=replay?'저장된 오늘 추천번호':'오늘의 흐름을 담는 중…';$('#balls').replaceChildren(...record.numbers.map(()=>{const el=document.createElement('span');el.className='ball pending';el.textContent='?';return el;}));dialog.showModal();if(!replay){await pause(reduced.matches?40:700);if(token!==run||!dialog.open)return;dialog.className='';}for(let i=0;i<6;i++){if(!replay)await pause(reduced.matches?40:i===0?350:460);if(token!==run||!dialog.open)return;const ball=$('#balls').children[i];ball.className='ball'+(replay?'':' revealed');ball.dataset.color=['yellow','blue','coral','green','yellow','blue'][i];ball.textContent=record.numbers[i];$('#reveal-status').textContent=replay?'저장된 오늘 추천번호':`${i+1} / 6 공개`;}dialog.className='complete';$('#reveal-status').textContent=replay?'저장된 오늘 추천번호':'오늘의 여섯 번호, 공개 완료!';if(!replay&&!reduced.matches){$('.confetti').replaceChildren(...Array.from({length:20},(_,i)=>{const e=document.createElement('i'),a=i*Math.PI/10;e.style.setProperty('--x',Math.cos(a)*180+'px');e.style.setProperty('--y',Math.sin(a)*200+'px');e.style.setProperty('--color',['#ffe34a','#5275d4','#f08a76','#a9d881'][i%4]);return e;}));}$('#confirm').disabled=false;$('#confirm').focus({preventScroll:true});}
