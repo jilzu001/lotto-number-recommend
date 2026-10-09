@@ -1,0 +1,38 @@
+const {chromium}=require('C:/Users/jilzu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+(async()=>{
+ const browser=await chromium.launch({channel:'msedge',headless:true});
+ const report=[],errors=[];
+ const ctx=await browser.newContext();
+ const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));
+ await p.goto('http://localhost:8766');
+ const sampling=await p.evaluate(()=>{for(let i=0;i<10000;i++){const n=generate();if(n.length!==6||new Set(n).size!==6||!n.every(v=>Number.isInteger(v)&&v>=1&&v<=45))return false;}return true;});assert(sampling);assert(await p.evaluate(()=>weightFor(1,'2026-10-09','seed-a')!==weightFor(1,'2026-10-09','seed-b')&&weightFor(1,'2026-10-09','seed-a')!==weightFor(1,'2026-10-10','seed-a')));report.push('10,000 irregular weighted sets: 6 unique integers within 1–45; seed/date alter weights');assert(await p.evaluate(()=>{const sets=new Set(Array.from({length:100},()=>generate('2026-10-09','fixed').join(',')));return sets.size===100;}));report.push('100 same-date, same-seed draws remain distinct through fresh per-step noise');
+ assert.deepEqual(await p.evaluate(()=>[day(new Date('2026-10-08T14:59:59Z')),day(new Date('2026-10-08T15:00:00Z'))]),['2026-10-08','2026-10-09']);report.push('KST midnight date boundary');
+ for(const [w,h] of [[320,568],[360,640],[390,844],[768,1024],[1440,900],[844,390]]){
+   await p.setViewportSize({width:w,height:h});
+   const fits=await p.evaluate(()=>({x:document.documentElement.scrollWidth<=innerWidth,y:document.documentElement.scrollHeight<=innerHeight,footer:document.querySelector('.disclaimer').getBoundingClientRect().bottom<=innerHeight}));assert(fits.x&&fits.y&&fits.footer,JSON.stringify({w,h,fits}));
+   await p.screenshot({path:`verification/home-${w}.png`});
+ }report.push('320×568, 360×640, 390×844, 768×1024, 1440×900, 844×390: no first-screen scroll, disclaimer visible');
+ await p.setViewportSize({width:390,height:844});
+ await p.locator('#recommend').click();await p.waitForFunction(()=>document.querySelector('#result').open);assert(await p.locator('#result').evaluate(e=>e.open));assert(await p.locator('#confirm').isDisabled());
+ await p.waitForTimeout(1100);assert((await p.locator('.ball.revealed').count())<6);
+ await p.waitForFunction(()=>!document.querySelector('#confirm').disabled);
+ const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem(KEY)));assert.equal(saved.numbers.length,6);assert.equal(saved.method,'irregular-weighted-v1');
+ assert.deepEqual(await p.locator('.ball').allTextContents(),saved.numbers.map(String));
+ await p.screenshot({path:'verification/result-mobile.png'});
+ await p.locator('#confirm').click();assert(await p.locator('#recommend').isDisabled());
+ await p.reload();assert(await p.locator('#recommend').isDisabled());
+ await p.evaluate(()=>{window.randomCalls=0;crypto.getRandomValues=()=>{window.randomCalls++;throw Error('Must not re-draw')}});
+ await p.locator('#today').click();assert.deepEqual(await p.locator('.ball').allTextContents(),saved.numbers.map(String));assert.equal(await p.evaluate(()=>window.randomCalls),0);await p.locator('#confirm').click();
+ report.push('Immediate dialog, staged reveal, confirm, daily limit after reload, replay with zero RNG calls');
+ await p.reload();await p.evaluate(()=>{const r=JSON.parse(localStorage.getItem(KEY));r.day='2026-01-01';localStorage.setItem(KEY,JSON.stringify(r));refresh();});assert(await p.locator('#recommend').isEnabled());report.push('Previous-day record allows new recommendation');
+ const p2=await ctx.newPage();await p2.goto('http://localhost:8766');
+ const [a,b]=await Promise.all([p.evaluate(()=>claim()),p2.evaluate(()=>claim())]);assert.deepEqual(a.record,b.record);assert.equal([a,b].filter(r=>!r.replay).length,1);report.push('Concurrent tabs share one atomic daily record');
+ await p.reload();await p.evaluate(()=>localStorage.removeItem(KEY));await p.reload();await p.locator('#recommend').click();await p.waitForFunction(()=>document.querySelector('#result').open);await p.keyboard.press('Escape');await p.waitForTimeout(3500);assert(!(await p.locator('#result').evaluate(e=>e.open)));assert(await p.locator('#recommend').isDisabled());await p.locator('#today').click();assert.equal(await p.locator('.ball.pending').count(),0);await p.locator('#confirm').click();report.push('Escape cancels animation while keeping saved recommendation');
+ await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>localStorage.removeItem(KEY));await p.reload();await p.locator('#recommend').click();await p.waitForFunction(()=>!document.querySelector('#confirm').disabled);assert.equal(await p.locator('.confetti i').count(),0);await p.locator('#confirm').click();report.push('Reduced motion: brief reveal and no particles');
+ await p.setViewportSize({width:1440,height:900});await p.locator('#today').click();await p.screenshot({path:'verification/result-desktop.png'});await p.locator('#confirm').click();
+ await p.evaluate(()=>{localStorage.setItem(KEY,JSON.stringify({day:day(),numbers:[1,1,2,3,4,5]}));refresh();});assert(await p.locator('#recommend').isDisabled());report.push('Corrupt current-day record blocks overwrite');
+ assert.deepEqual(errors,[]);report.push('No browser JavaScript errors');
+ fs.writeFileSync('verification/results.json',JSON.stringify(report,null,2));console.log(report.join('\n'));await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

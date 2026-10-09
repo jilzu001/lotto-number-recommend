@@ -1,0 +1,13 @@
+[
+  "10,000 irregular weighted sets: 6 unique integers within 1–45; seed/date alter weights",
+  "100 same-date, same-seed draws remain distinct through fresh per-step noise",
+  "KST midnight date boundary",
+  "320×568, 360×640, 390×844, 768×1024, 1440×900, 844×390: no first-screen scroll, disclaimer visible",
+  "Immediate dialog, staged reveal, confirm, daily limit after reload, replay with zero RNG calls",
+  "Previous-day record allows new recommendation",
+  "Concurrent tabs share one atomic daily record",
+  "Escape cancels animation while keeping saved recommendation",
+  "Reduced motion: brief reveal and no particles",
+  "Corrupt current-day record blocks overwrite",
+  "No browser JavaScript errors"
+]

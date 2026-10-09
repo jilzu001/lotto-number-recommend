@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#d6e3fa"><meta name="description" content="하루 한 번, 날짜와 시간에 따라 1~45 중 중복 없는 6개를 추천합니다. 실제 당첨번호 또는 예측 서비스가 아닙니다.">
+  <title>로또 번호 추천</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
+</head>
+<body>
+<main>
+  <header><span class="badge">TODAY’S SIX</span><h1>로또 번호 추천</h1><p>오늘의 흐름을 담아 · 하루 한 번</p></header>
+  <section class="machine" aria-label="번호 추천 머신">
+    <div class="machine-top"><span>TODAY’S NUMBERS</span><i aria-hidden="true"></i></div>
+    <div class="window" aria-hidden="true"><span class="orb yellow">6</span><span class="orb blue">45</span><span class="orb coral">?</span><span class="orb green">★</span><span class="shine">✦</span></div>
+    <div class="slots" aria-hidden="true"><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span><span>?</span></div>
+    <button id="recommend" class="push"><span>번호 추천<small>1 ~ 45 중 6개</small></span></button>
+  </section>
+  <p id="status" role="status" aria-live="polite">한국시간 자정에 새 추천</p>
+  <button id="today" class="secondary" hidden>오늘 추천번호 확인</button>
+  <footer><p class="disclaimer">실제 금전 지급 없음</p><p class="footnote">날짜·시간 반영 추천 · 당첨 확률을 높이지 않음</p></footer>
+</main>
+<dialog id="result" aria-labelledby="result-title"><div class="rays" aria-hidden="true"></div><div class="confetti" aria-hidden="true"></div><div class="result-content"><span class="badge">YOUR LUCKY SIX</span><h2 id="result-title">오늘의 추천번호</h2><p id="result-date"></p><div id="balls" aria-label="추천번호 6개"></div><p id="reveal-status" role="status" aria-live="polite"></p><button id="confirm" class="secondary">확인</button><p class="footnote">오늘의 흐름 반영 · 실제 당첨번호 아님</p></div></dialog>
+</body></html>
