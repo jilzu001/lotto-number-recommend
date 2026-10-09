@@ -39,3 +39,4 @@ $('#history-open').addEventListener('click',()=>{if(!busy)showHistory();});
 $('#history-confirm').addEventListener('click',()=>$('#history').close());
 $('#result').addEventListener('close',()=>{++run;busy=false;$('.confetti').replaceChildren();refresh();});
 window.addEventListener('storage',e=>{if(e.key===KEY||e.key===HISTORY_KEY||e.key===null)refresh();});window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});setInterval(refresh,1000);refresh();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(error=>console.warn('홈 화면 실행 설정을 등록하지 못했습니다.',error));});}
