@@ -11,9 +11,9 @@ const fs=require('node:fs');
  assert.deepEqual(await p.evaluate(()=>[day(new Date('2026-10-08T14:59:59Z')),day(new Date('2026-10-08T15:00:00Z'))]),['2026-10-08','2026-10-09']);report.push('KST midnight date boundary');
  for(const [w,h] of [[320,568],[360,640],[390,844],[768,1024],[1440,900],[844,390]]){
    await p.setViewportSize({width:w,height:h});
-   const fits=await p.evaluate(()=>({x:document.documentElement.scrollWidth<=innerWidth,y:document.documentElement.scrollHeight<=innerHeight,footer:document.querySelector('.disclaimer').getBoundingClientRect().bottom<=innerHeight}));assert(fits.x&&fits.y&&fits.footer,JSON.stringify({w,h,fits}));
+   const fits=await p.evaluate(()=>({x:document.documentElement.scrollWidth<=innerWidth,y:document.documentElement.scrollHeight<=innerHeight,footer:document.querySelector('footer').getBoundingClientRect().bottom<=innerHeight}));assert(fits.x&&fits.y&&fits.footer,JSON.stringify({w,h,fits}));
    await p.screenshot({path:`verification/home-${w}.png`});
- }report.push('320×568, 360×640, 390×844, 768×1024, 1440×900, 844×390: no first-screen scroll, disclaimer visible');
+ }report.push('320×568, 360×640, 390×844, 768×1024, 1440×900, 844×390: no first-screen scroll, footer visible');
  await p.setViewportSize({width:390,height:844});
  await p.locator('#recommend').click();await p.waitForFunction(()=>document.querySelector('#result').open);assert(await p.locator('#result').evaluate(e=>e.open));assert(await p.locator('#confirm').isDisabled());
  await p.waitForTimeout(1100);assert((await p.locator('.ball.revealed').count())<6);
