@@ -19,7 +19,10 @@ html = html.replace('</body>', '<script>\n' + js + '\n</script>\n</body>')
 (output / 'index.html').write_text(html, encoding='utf-8')
 shutil.copy2(root / 'manifest.webmanifest', output / 'manifest.webmanifest')
 shutil.copytree(root / 'icons', output / 'icons', dirs_exist_ok=True)
+info_files = ['about.html', 'privacy.html', 'info.css']
+for name in info_files:
+    shutil.copy2(root / name, output / name)
 worker = (root / 'sw.js').read_text(encoding='utf-8')
-version = hashlib.sha256((html + worker).encode('utf-8')).hexdigest()[:12]
+version = hashlib.sha256((html + worker).encode('utf-8') + b''.join((root / name).read_bytes() for name in info_files)).hexdigest()[:12]
 (output / 'sw.js').write_text(worker.replace('__VERSION__', version), encoding='utf-8')
 print('Built self-contained index.html:', len(html.encode('utf-8')), 'bytes')
