@@ -8,13 +8,13 @@ output = root / '_site'
 output.mkdir(exist_ok=True)
 html = (root / 'index.html').read_text(encoding='utf-8')
 css = (root / 'style.css').read_text(encoding='utf-8')
-js = (root / 'app.js').read_text(encoding='utf-8') + '\n' + (root / 'materials.js').read_text(encoding='utf-8')
+js = (root / 'app.js').read_text(encoding='utf-8') + '\n' + (root / 'material-games.js').read_text(encoding='utf-8') + '\n' + (root / 'materials.js').read_text(encoding='utf-8')
 style_link = '<link rel="stylesheet" href="style.css">'
 script_link = '<script src="app.js" defer></script>'
 assert html.count(style_link) == 1 and html.count(script_link) == 1
 assert '</style' not in css.lower() and '</script' not in js.lower()
 html = html.replace(style_link, '<style>\n' + css + '\n</style>')
-html = html.replace(script_link, '').replace('<script src="materials.js" defer></script>', '')
+html = html.replace(script_link, '').replace('<script src="materials.js" defer></script>', '').replace('<script src="material-games.js" defer></script>', '')
 html = html.replace('</body>', '<script>\n' + js + '\n</script>\n</body>')
 (output / 'index.html').write_text(html, encoding='utf-8')
 shutil.copy2(root / 'manifest.webmanifest', output / 'manifest.webmanifest')
